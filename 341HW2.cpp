@@ -12,7 +12,7 @@ Description: This program reads arithmetic operations and operands from an input
 #include <sys/wait.h>
 #include <vector>
 #include <sstream>
-#include <cstring> // Include the cstring header
+#include <cstring>
 
 using namespace std;
 
@@ -40,29 +40,29 @@ double performOperation(string operation, const vector<double>& numbers) {
 
 int main() {
     int fd[2]; // File descriptors for pipe
-    if(pipe(fd) == -1) { // Creating a pipe, fd[0] for reading and fd[1] for writing
+    if (pipe(fd) == -1) { // Creating a pipe, fd[0] for reading and fd[1] for writing
         cerr << "Pipe failed" << endl; // Error handling if pipe creation fails
         return 1;
     }
 
     pid_t pid = fork(); // Fork a child process
-    if(pid == -1) { // Error handling for fork failure
+    if (pid == -1) { // Error handling for fork failure
         cerr << "Fork failed" << endl;
         return 1;
     }
 
-    if(pid > 0) { // Parent process
+    if (pid > 0) { // Parent process
         close(fd[0]); // Close reading end of pipe in parent
         ifstream inputFile("input.txt"); // Open input file
-        if(!inputFile) { // Error handling if input file cannot be opened
+        if (!inputFile) { // Error handling if input file cannot be opened
             cerr << "Error opening input file" << endl;
             return 1;
         }
         string operation;
         float num;
-        while(inputFile >> operation) { // Read operation from file
+        while (inputFile >> operation) { // Read operation from file
             vector<double> numbers; // Store numbers from file
-            while(inputFile >> num) { // Read numbers from file
+            while (inputFile >> num) { // Read numbers from file
                 numbers.push_back(num);
             }
             string line = operation;
@@ -71,9 +71,9 @@ int main() {
             }
             // Send line to child through pipe
             write(fd[1], line.c_str(), line.size() + 1);
-            double result; // Result variable to store the result sent by child
+            char result[100]; // Buffer to receive result from child
             // Read result from child
-            read(fd[0], &result, sizeof(result));
+            read(fd[1], result, sizeof(result));
             cout << "Original: " << line << " = " << result << endl; // Print original line and result
         }
         close(fd[1]); // Close writing end of pipe in parent
@@ -81,22 +81,25 @@ int main() {
     } else { // Child process
         close(fd[1]); // Close writing end of pipe in child
         char buffer[100];
-        while(read(fd[0], buffer, sizeof(buffer)) > 0) { // Read from parent through pipe
+        while (read(fd[0], buffer, sizeof(buffer)) > 0) { // Read from parent through pipe
             string line(buffer);
             istringstream iss(line);
             string operation;
             iss >> operation;
             vector<double> numbers;
             double num;
-            while(iss >> num) { // Perform arithmetic operations
+            while (iss >> num) { // Perform arithmetic operations
                 numbers.push_back(num);
             }
             double result = performOperation(operation, numbers); // Perform arithmetic operation
+            stringstream ss;
+            ss << result; // Convert result to string
+            string resultStr = ss.str();
             // Send result back to parent through pipe
-            write(fd[1], &result, sizeof(result));
-            memset(buffer, 0, sizeof(buffer)); // Clear buffer for next read
+            write(fd[1], resultStr.c_str(), resultStr.size() + 1);
         }
         close(fd[0]); // Close reading end of pipe in child
     }
     return 0;
 }
+
