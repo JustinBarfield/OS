@@ -10,9 +10,8 @@ Description: This program reads arithmetic operations and operands from an input
 #include <fstream>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <vector> // Include the vector header
+#include <vector>
 #include <sstream>
-
 
 using namespace std;
 
@@ -71,9 +70,9 @@ int main() {
             }
             // Send line to child through pipe
             write(fd[1], line.c_str(), line.size() + 1);
-            char result[100];
+            double result; // Result variable to store the result sent by child
             // Read result from child
-            read(fd[0], result, sizeof(result));
+            read(fd[0], &result, sizeof(result));
             cout << "Original: " << line << " = " << result << endl; // Print original line and result
         }
         close(fd[1]); // Close writing end of pipe in parent
@@ -92,9 +91,8 @@ int main() {
                 numbers.push_back(num);
             }
             double result = performOperation(operation, numbers); // Perform arithmetic operation
-            string resultStr = to_string(result);
             // Send result back to parent through pipe
-            write(fd[1], resultStr.c_str(), resultStr.size() + 1);
+            write(fd[1], &result, sizeof(result));
         }
         close(fd[0]); // Close reading end of pipe in child
     }
