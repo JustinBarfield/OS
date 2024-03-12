@@ -10,8 +10,31 @@ Description: This program reads arithmetic operations and operands from an input
 #include <fstream>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <vector> // Include the vector header
 
 using namespace std;
+
+// Function to perform arithmetic operation
+double performOperation(string operation, const vector<double>& numbers) {
+    double result = numbers[0];
+    for (size_t i = 1; i < numbers.size(); ++i) {
+        if (operation == "ADD") {
+            result += numbers[i];
+        } else if (operation == "SUB") {
+            result -= numbers[i];
+        } else if (operation == "MUL") {
+            result *= numbers[i];
+        } else if (operation == "DIV") {
+            if (numbers[i] != 0) {
+                result /= numbers[i];
+            } else {
+                cerr << "Error: Division by zero" << endl;
+                return 0;
+            }
+        }
+    }
+    return result;
+}
 
 int main() {
     int fd[2]; // File descriptors for pipe
@@ -36,9 +59,13 @@ int main() {
         string operation;
         float num;
         while(inputFile >> operation) { // Read operation from file
-            string line = operation;
+            vector<double> numbers; // Store numbers from file
             while(inputFile >> num) { // Read numbers from file
-                line += " " + to_string(num);
+                numbers.push_back(num);
+            }
+            string line = operation;
+            for (const auto& n : numbers) {
+                line += " " + to_string(n);
             }
             // Send line to child through pipe
             write(fd[1], line.c_str(), line.size() + 1);
@@ -57,24 +84,12 @@ int main() {
             istringstream iss(line);
             string operation;
             iss >> operation;
-            float result = 0;
-            float num;
+            vector<double> numbers;
+            double num;
             while(iss >> num) { // Perform arithmetic operations
-                if(operation == "ADD") {
-                    result += num;
-                } else if(operation == "SUB") {
-                    result -= num;
-                } else if(operation == "MUL") {
-                    result *= num;
-                } else if(operation == "DIV") {
-                    if(num != 0) {
-                        result /= num;
-                    } else {
-                        cerr << "Error: Division by zero" << endl;
-                        return 1;
-                    }
-                }
+                numbers.push_back(num);
             }
+            double result = performOperation(operation, numbers); // Perform arithmetic operation
             string resultStr = to_string(result);
             // Send result back to parent through pipe
             write(fd[1], resultStr.c_str(), resultStr.size() + 1);
