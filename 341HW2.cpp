@@ -12,6 +12,7 @@ Description: This program reads arithmetic operations and operands from an input
 #include <sys/wait.h>
 #include <vector>
 #include <sstream>
+#include <cstring> // Include the cstring header
 
 using namespace std;
 
