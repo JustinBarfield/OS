@@ -93,6 +93,7 @@ int main() {
             double result = performOperation(operation, numbers); // Perform arithmetic operation
             // Send result back to parent through pipe
             write(fd[1], &result, sizeof(result));
+            memset(buffer, 0, sizeof(buffer)); // Clear buffer for next read
         }
         close(fd[0]); // Close reading end of pipe in child
     }
