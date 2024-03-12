@@ -73,7 +73,7 @@ int main() {
             write(fd[1], line.c_str(), line.size() + 1);
             char result[100]; // Buffer to receive result from child
             // Read result from child
-            read(fd[1], result, sizeof(result));
+            read(fd[0], result, sizeof(result));
             cout << "Original: " << line << " = " << result << endl; // Print original line and result
         }
         close(fd[1]); // Close writing end of pipe in parent
@@ -96,10 +96,9 @@ int main() {
             ss << result; // Convert result to string
             string resultStr = ss.str();
             // Send result back to parent through pipe
-            write(fd[1], resultStr.c_str(), resultStr.size() + 1);
+            write(fd[1], resultStr.c_str(), resultStr.size());
         }
         close(fd[0]); // Close reading end of pipe in child
     }
     return 0;
 }
-
