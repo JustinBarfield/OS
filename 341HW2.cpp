@@ -11,6 +11,8 @@ Description: This program reads arithmetic operations and operands from an input
 #include <unistd.h>
 #include <sys/wait.h>
 #include <vector> // Include the vector header
+#include <sstream>
+
 
 using namespace std;
 
